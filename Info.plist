@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!-- ── App Identity ── -->
+    <key>CFBundleName</key>
+    <string>ClipBoard</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>ClipBoard</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>com.clipboard.app</string>
+
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.1.0</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+
+    <!-- ── Menu Bar App: hide Dock icon and main window ── -->
+    <!-- CRITICAL: without this the app shows in the Dock and opens a blank window -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- ── macOS minimum version ── -->
+    <!-- MenuBarExtra and SMAppService both require macOS 13+ -->
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+
+    <!-- ── Privacy usage descriptions ── -->
+    <!-- macOS shows these strings in the permission prompt to the user -->
+
+    <!-- Required: ScreenshotWatcher monitors ~/Desktop for new screenshots -->
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>ClipBar monitors your Desktop folder to detect new screenshots and add them to your clipboard history.</string>
+
+    <!-- Required for any file system access beyond sandbox defaults -->
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>ClipBar may access files you explicitly open or copy.</string>
+
+    <!-- ── App icon ── -->
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
+
+    <!-- ── Supported platforms ── -->
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>MacOSX</string>
+    </array>
+
+</dict>
+</plist>
