@@ -109,25 +109,59 @@ final class ClipboardManager {
     }
 
     /// Tries to extract a plain-text string from the pasteboard.
-    /// Priority: plain text → HTML (stripped) → RTF (stripped).
+    /// Priority: plain text variants → HTML (stripped) → RTF (stripped) → URL → any string-convertible type.
     private func extractText(from pasteboard: NSPasteboard) -> String? {
-        // 1. Plain text — fastest, preferred.
+        // 1. Standard plain text (public.utf8-plain-text) — fastest, preferred.
         if let text = pasteboard.string(forType: .string), !text.isEmpty {
             return text
         }
 
-        // 2. HTML — common for web "Copy" buttons (ChatGPT, GitHub, etc.).
+        // 2. Legacy plain-text UTI (public.text) — used by some Electron / web-bridge apps.
+        if let text = pasteboard.string(forType: NSPasteboard.PasteboardType("public.text")), !text.isEmpty {
+            return text
+        }
+
+        // 3. Old Cocoa string type (NSStringPboardType) — still emitted by some WebKit internals.
+        if let text = pasteboard.string(forType: NSPasteboard.PasteboardType("NSStringPboardType")), !text.isEmpty {
+            return text
+        }
+
+        // 4. HTML — common for web "Copy" buttons (ChatGPT, GitHub, Traveloka, etc.).
         if let htmlData = pasteboard.data(forType: .html),
            let html = String(data: htmlData, encoding: .utf8) ?? String(data: htmlData, encoding: .isoLatin1) {
             let stripped = plainText(fromHTML: html)
             if !stripped.isEmpty { return stripped }
         }
 
-        // 3. RTF — used by some native and web apps.
+        // 5. RTF — used by some native and web apps.
         if let rtfData = pasteboard.data(forType: .rtf),
            let attributed = NSAttributedString(rtf: rtfData, documentAttributes: nil) {
             let text = attributed.string
             if !text.isEmpty { return text }
+        }
+
+        // 6. URL — when a site's copy button writes a URL rather than plain text.
+        if let urlString = pasteboard.string(forType: .URL), !urlString.isEmpty {
+            return urlString
+        }
+        if let urlString = pasteboard.string(forType: NSPasteboard.PasteboardType("public.url")), !urlString.isEmpty {
+            return urlString
+        }
+
+        // 7. Diagnostic fallback — log every available type so unknown formats can be identified.
+        if let types = pasteboard.types, !types.isEmpty {
+            print("[ClipboardManager] Could not extract text. Available types: \(types.map(\.rawValue))")
+            // Last-ditch attempt: try to read raw UTF-8 bytes from any type that looks textual.
+            for type_ in types {
+                let raw = type_.rawValue.lowercased()
+                guard raw.contains("text") || raw.contains("string") || raw.contains("utf") else { continue }
+                if let data = pasteboard.data(forType: type_),
+                   let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1),
+                   !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    print("[ClipboardManager] Extracted text via fallback type: \(type_.rawValue)")
+                    return text.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
         }
 
         return nil
